@@ -1,4 +1,19 @@
 <?php
+require_once("models/config.php");
+if (!securePage($_SERVER['PHP_SELF'])){die();}
+require_once("models/header.php");
+echo "
+<body>
+<div id='wrapper'>
+<div id='top'><div id='logo'></div></div>
+<div id='content'>
+<h1>Stegany</h1>
+<h6>A pure php steganography implementation</h6>
+<div id='left-nav'>";
+include("left-nav.php");
+include('Crypt/AES.php');
+   $aes = new Crypt_AES();
+   $aes->setKey('abcdefghijklmnop');
 $test='steg.png';
 try {
     
@@ -50,7 +65,7 @@ try {
 	$test= sha1_file($_FILES['userfile']['tmp_name']).'.'.$ext;
     if (!move_uploaded_file(
         $_FILES['userfile']['tmp_name'],
-        sprintf('./images/%s.%s',
+        sprintf('./Cryptimages/%s.%s',
             sha1_file($_FILES['userfile']['tmp_name']),
             $ext
         )
@@ -58,29 +73,32 @@ try {
         throw new RuntimeException('Failed to move uploaded file.');
     }
 	
-    echo 'File is uploaded successfully.';
 
 } catch (RuntimeException $e) {
 
     echo $e->getMessage();
 
 }
-$im=imagecreatefrompng('Images\\'.$test);
+$im=imagecreatefrompng('Cryptimages\\'.$test);
 $rgb=imagecolorat($im,0,0);
 $r = ($rgb >> 16) & 0xFF;
 $g = ($rgb >> 8) & 0xFF;
 $b = $rgb & 0xFF;
 $length=$g;
-echo $length.'</br>';
+$pon=0;
+$block=0;
+$keyrand=0;
 $rgb=imagecolorat($im,0,1);
 $r = ($rgb >> 16) & 0xFF;
 $g = ($rgb >> 8) & 0xFF;
 $b = $rgb & 0xFF;
 $k=$g;
-echo 'k is '.$k.'</br>';
+$block=$r;
+$keyrand=$b;
 $i=0;
 $j=0;
 $x=0;
+$tm=0;
 $text=array();
 for($i=2;$i<imagesx($im);$i++)
 {
@@ -90,8 +108,18 @@ for($i=2;$i<imagesx($im);$i++)
 		$r = ($rgb >> 16) & 0xFF;
 		$g = ($rgb >> 8) & 0xFF;
 		$b = $rgb & 0xFF;
+		if($block==$tm)
+		{
+			$pon+=1;
+			$block=$r;
+			$keyrand=$b;
+			$tm=0;
+		}
+		else{
 		if($x<$length)
 		{	
+			if($keyrand==1)
+			{
 			if($k==0 && $i%2==0)
 			{
 			switch($x%6)
@@ -116,6 +144,7 @@ for($i=2;$i<imagesx($im);$i++)
 			break;
 			}
 			$x++;
+			$tm++;
 			}
 			if($k==1 && $i%2==1)
 			{
@@ -141,10 +170,73 @@ for($i=2;$i<imagesx($im);$i++)
 			break;
 			}
 			$x++;
+			$tm++;
 			}
-			
+			}
+			if($keyrand==0)
+			{
+				if($k==0 && $i%2==0)
+			{
+			switch($x%6)
+			{
+			case 0:
+			array_push($text,chr($g));
+			break;
+			case 1:
+			array_push($text,chr($r));
+			break;
+			case 2:
+			array_push($text,chr($b));
+			break;
+			case 3:
+			array_push($text,chr($g));
+			break;
+			case 4:
+			array_push($text,chr($r));
+			break;
+			case 5:
+			array_push($text,chr($b));
+			break;
+			}
+			$x++;
+			$tm++;
+			}
+			if($k==1 && $i%2==1)
+			{
+			switch($x%6)
+			{
+			case 0:
+			array_push($text,chr($g));
+			break;
+			case 1:
+			array_push($text,chr($r));
+			break;
+			case 2:
+			array_push($text,chr($b));
+			break;
+			case 3:
+			array_push($text,chr($g));
+			break;
+			case 4:
+			array_push($text,chr($r));
+			break;
+			case 5:
+			array_push($text,chr($b));
+			break;
+			}
+			$x++;
+			$tm++;
+			}
+			}
 		}
-	}
+	}}
 }
-echo implode($text);
+echo '</div>';
+$plaintext=$aes->decrypt(implode($text));
+echo '<h1>Decrypted text is: '.$plaintext.'</h1>';
+echo '
+<div id="bottom"></div>
+</div>
+</body>
+</html>';
 ?>

@@ -11,17 +11,7 @@ echo "
 <h6>A pure php steganography implementation</h6>
 <div id='left-nav'>";
 include("left-nav.php");
-echo '<form enctype="multipart/form-data" action="steg.php" method="POST">
-    <input type="hidden" name="MAX_FILE_SIZE" value="30000" />
-	Enter Pass-Phrase:<input type="text" name="passphrase" /></br>
-    Send this file: <input name="userfile" type="file" />
-    <input type="submit" value="Submit" />
-</form></br></br></br>
-<form enctype="multipart/form-data" action="decrypt.php" method="POST">
-    <input type="hidden" name="MAX_FILE_SIZE" value="30000" />
-    Send this file: <input name="userfile" type="file" />
-    <input type="submit" value="Submit" />
-</form>
+echo '
 </div>
 <div id="bottom"></div>
 </div>

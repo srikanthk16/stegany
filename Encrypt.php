@@ -1,10 +1,10 @@
 <?php
 
 header('Content-Type: text/plain; charset=utf-8');
-
-   include('Crypt/RSA.php');
-   $rsa = new Crypt_RSA();
-   extract($rsa->createKey());
+session_start();
+   include('Crypt/AES.php');
+   $aes = new Crypt_AES();
+   $aes->setKey('abcdefghijklmnop');
    if(isset($_POST["passphrase"]))
    {
    $plaintext = $_POST["passphrase"];
@@ -14,13 +14,8 @@ header('Content-Type: text/plain; charset=utf-8');
    $plaintext='stegany';
    echo 'unset passphrase';
    }
-   $rsa->loadKey($privatekey);
-  $ciphertext = $rsa->encrypt($plaintext);
-   $rsa->loadKey($publickey);
-   echo $rsa->decrypt($ciphertext);
- 
-
-try {
+   $ciphertext=$aes->encrypt($plaintext);
+ try {
     
     // Undefined | Multiple Files | $_FILES Corruption Attack
     // If this request falls under any of them, treat it invalid.
@@ -45,7 +40,7 @@ try {
     }
 
     // You should also check filesize here. 
-    if ($_FILES['userfile']['size'] > 1000000) {
+    if ($_FILES['userfile']['size'] > 10000000) {
         throw new RuntimeException('Exceeded filesize limit.');
     }
 
@@ -63,7 +58,7 @@ try {
     )) {
         throw new RuntimeException('Invalid file format.');
     }
-
+	$test= sha1_file($_FILES['userfile']['tmp_name']).'.'.$ext;
     // You should name it uniquely.
     // DO NOT USE $_FILES['userfile']['name'] WITHOUT ANY VALIDATION !!
     // On this example, obtain safe unique name from its binary data.
@@ -78,7 +73,9 @@ try {
     }
 
     echo 'File is uploaded successfully.';
-
+	$_SESSION['text']=$ciphertext;
+	$_SESSION['image']=$test;
+	header("location: steg.php");
 } catch (RuntimeException $e) {
 
     echo $e->getMessage();
