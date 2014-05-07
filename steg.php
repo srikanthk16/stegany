@@ -26,7 +26,7 @@ else
 echo 'no image file';
 die();
 }$text=$_SESSION['text'];
-echo '<h1>Encrypted Text is'.$text.'</h1>';
+echo $text;
 $keys_prim=array('g','r','b','b','r','g');
 $keys_secon=array('r','b','g','r','g','b');
 $rgb=imagecolorat($im,0,0);
