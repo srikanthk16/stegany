@@ -2,9 +2,7 @@
 
 header('Content-Type: text/plain; charset=utf-8');
 session_start();
-   include('Crypt/AES.php');
-   $aes = new Crypt_AES();
-   $aes->setKey('abcdefghijklmnop');
+
    if(isset($_POST["passphrase"]))
    {
    $plaintext = $_POST["passphrase"];
@@ -14,7 +12,17 @@ session_start();
    $plaintext='stegany';
    echo 'unset passphrase';
    }
-   $ciphertext=$aes->encrypt($plaintext);
+     $td = mcrypt_module_open (MCRYPT_TRIPLEDES, '', MCRYPT_MODE_CBC, '');
+    $ks = mcrypt_enc_get_key_size ($td);
+    $key = substr ('stegany', 0, $ks);
+    $key = utf8_encode($key);
+    $iv = 'steganos';
+    $iv = utf8_encode($iv);
+    mcrypt_generic_init ($td, $key, $iv);
+    $ciphertext = mcrypt_generic ($td, utf8_encode($plaintext));
+    mcrypt_generic_deinit ($td);
+    echo '<b>Encrypted:</b>'.base64_encode($ciphertext).'<br>';
+	 mcrypt_module_close ($td);
  try {
     
     // Undefined | Multiple Files | $_FILES Corruption Attack
@@ -33,15 +41,16 @@ session_start();
         case UPLOAD_ERR_NO_FILE:
             throw new RuntimeException('No file sent.');
         case UPLOAD_ERR_INI_SIZE:
+			throw new RuntimeException('Exceeded filesize limit php.ini.');
         case UPLOAD_ERR_FORM_SIZE:
-            throw new RuntimeException('Exceeded filesize limit.');
+            throw new RuntimeException('Exceeded filesize limit from form.');
         default:
             throw new RuntimeException('Unknown errors.');
     }
 
     // You should also check filesize here. 
     if ($_FILES['userfile']['size'] > 10000000) {
-        throw new RuntimeException('Exceeded filesize limit.');
+        throw new RuntimeException('Exceeded filesize limit condition.');
     }
 
     // DO NOT TRUST $_FILES['userfile']['mime'] VALUE !!
@@ -73,7 +82,7 @@ session_start();
     }
 
     echo 'File is uploaded successfully.';
-	$_SESSION['text']=$ciphertext;
+	$_SESSION['text']=base64_encode($ciphertext);
 	$_SESSION['image']=$test;
 	header("location: steg.php");
 } catch (RuntimeException $e) {

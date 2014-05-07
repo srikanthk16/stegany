@@ -11,9 +11,6 @@ echo "
 <h6>A pure php steganography implementation</h6>
 <div id='left-nav'>";
 include("left-nav.php");
-include('Crypt/AES.php');
-   $aes = new Crypt_AES();
-   $aes->setKey('abcdefghijklmnop');
 $test='steg.png';
 try {
     
@@ -40,7 +37,7 @@ try {
     }
 
     // You should also check filesize here. 
-    if ($_FILES['userfile']['size'] > 1000000) {
+    if ($_FILES['userfile']['size'] > 100000000) {
         throw new RuntimeException('Exceeded filesize limit.');
     }
 
@@ -232,8 +229,17 @@ for($i=2;$i<imagesx($im);$i++)
 	}}
 }
 echo '</div>';
-$plaintext=$aes->decrypt(implode($text));
-echo '<h1>Decrypted text is: '.$plaintext.'</h1>';
+   $td = mcrypt_module_open (MCRYPT_TRIPLEDES, '', MCRYPT_MODE_CBC, '');
+    $ks = mcrypt_enc_get_key_size ($td);
+    $key = substr ('stegany', 0, $ks);
+    $key = utf8_encode($key);
+    $iv = 'steganos';
+    $iv = utf8_encode($iv);
+    mcrypt_generic_init ($td, $key, $iv);
+	$plaintext=mdecrypt_generic($td,base64_decode(implode($text)));
+	 mcrypt_generic_deinit ($td);
+	  mcrypt_module_close ($td);
+echo '<h1>Decrypted text is: '.trim($plaintext).'</h1>';
 echo '
 <div id="bottom"></div>
 </div>
